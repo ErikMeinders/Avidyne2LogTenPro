@@ -1,1 +1,1 @@
-python ./generateLogTenX.py | sort > flights.html
+python ./bin/generateLogTenX.py | sort > flights.html
