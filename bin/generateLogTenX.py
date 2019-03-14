@@ -19,6 +19,15 @@ import json
 import decimal
 from boto3.dynamodb.conditions import Key, Attr
 
+def atoi(s):
+	n, notnegative = 0, 1
+	if s[0]=="-":
+		notnegative = -1
+		s = s[1:]
+	for i in s:
+		n = n*10 + ord(i)-ord("0")
+	return notnegative*n
+
 import sys
 def printf(format, *args):
     sys.stdout.write(format % args)
@@ -32,9 +41,20 @@ class DecimalEncoder(json.JSONEncoder):
         return super(DecimalEncoder, self).default(o)
 
 dynamodb = boto3.resource('dynamodb', region_name='eu-central-1')
-
 table = dynamodb.Table('avidyneFlightLogs')
 
+empty_package={
+  "metadata": {
+    "application"              : "ErixLogTenUpdater",
+    "version"                  : "1.0",
+    "dateFormat"               : "MM/dd/yy",
+    "dateAndTimeFormat"        : "MM/dd/yy%20HH:mm:ss",
+    "timesAreZulu"             : "true",
+    "shouldApplyAutoFillTimes" : "true"
+  },
+  "entities": []
+}
+logtenline='logtenprox://v2/addEntities?package='
 
 response = table.scan( )
 
@@ -45,19 +65,26 @@ def writeFlight(flight):
   try: 
     datum = flight['flightID'].split(' ')[0]
     [ mo, da, yr ] = datum.split('/')
-    printf ("%s/%s/%s: ", yr, mo, da)
 
-    # datum = '02/02/19'
+    # Only consider flights after june 1 2018
+
+    if ( 10000 * atoi(yr) + 100 * atoi(mo) + atoi(da) ) <= 180601:
+       return
 
     if not 'icaoFrom' in flight:
       flight['icaoFrom']='ABCD'
     if not 'icaoTo' in flight:
       flight['icaoTo']='DCBA'
      
+    printf ("%s/%02d/%02d: ", yr, int(mo), int(da))
+
     entry={
 
       "entity_name"                : "Flight",
+
+
       "flight_flightDate"          : datum,
+      "flight_key"                 : flight['flightID'],
       "flight_from"                : flight['icaoFrom'],
       "flight_to"                  : flight['icaoTo'],
       "flight_distance"            : str(flight['Traveled']),
@@ -73,51 +100,41 @@ def writeFlight(flight):
       "flight_selectedCrewPIC"     : "Erik Meinders"
     }
 
-    if (yr == "19" ):
-       entries.append(entry)
+    entries.append(entry)
 
-    package={
-      "metadata": {
-        "application"              : "ErixLogTenUpdater",
-        "version"                  : "1.0",
-        "dateFormat"               : "MM/dd/yy",
-        "dateAndTimeFormat"        : "MM/dd/yy%20HH:mm:ss",
-        "timesAreZulu"             : "true",
-        "shouldApplyAutoFillTimes" : "true"
-      },
-      "entities": [ entry ]
-    }
+    package=empty_package
+    package['entities'] = [ entry ] 
 
-    line='logtenprox://v2/addEntities?package='+json.dumps(package)
+    line=logtenline+json.dumps(package)
 
-    printf ("<a href='%s'> Form %4s to %4s %s</a><br>\n", line, entry['flight_from'], entry['flight_to'], entry['flight_actualDepartureTime'])
+    printf ("<a href='%s'>Form %4s to %4s</a> Key: %s<br>\n",
+     line,
+     entry['flight_from'],
+     entry['flight_to'],
+     entry['flight_actualDepartureTime'])
 
   except Exception as e:
     printf ("Exception discovered %s\n", e)
 
+# main 
+
 for i in response[u'Items']:
     writeFlight(i)
 
+# write sum
 
-package={
-  "metadata": {
-    "application"              : "ErixLogTenUpdater",
-    "version"                  : "1.0",
-    "dateFormat"               : "MM/dd/yy",
-    "dateAndTimeFormat"        : "MM/dd/yy%20HH:mm:ss",
-    "timesAreZulu"             : "true",
-    "shouldApplyAutoFillTimes" : "true"
-  },
-  "entities": entries
-}
+package=empty_package
+package['entities']=entries
 
-line='logtenprox://v2/addEntities?package='+json.dumps(package)
+line=logtenline+json.dumps(package)
 
-printf ("Totaal <a href='%s'>2019</a>\n", line)
+printf ("<br>Alle vluchten <a href='%s'>na 1 juni 2018</a>\n", line)
+
+#### 
 
 sample = {
   "lonEnd": "6.8838",
-  "flightID": "4/9/17 09:26:47\r\n",
+  "flightID": "4/9/17 09:26:47",
   "lonStart": "5.5261",
   "AvgSpeed": "100.416255672",
   "Flying": "0:38:36",
