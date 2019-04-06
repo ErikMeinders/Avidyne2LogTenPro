@@ -90,11 +90,13 @@ def writeFlight(flight):
       "flight_distance"            : str(flight['Traveled']),
       "flight_actualDepartureTime" : datum+' '+flight['OffBlock'],
       "flight_actualArrivalTime"   : datum+' '+flight['OnBlocks'],
+      "flight_takeoffTime"         : datum+' '+flight['TakeOff'],
+      "flight_landingTime"         : datum+' '+flight['Landing'],
 
       "flight_totalTime"           : flight['PICTime'],
 
-      "flight_dayLandings"         : "1",
-      "flight_dayTakeoffs"         : "1",
+      # "flight_dayLandings"         : "1",
+      # "flight_dayTakeoffs"         : "1",
       "flight_selectedAircraftType": "SR-20",
       "flight_selectedAircraftID"  : "N808KB",
       "flight_selectedCrewPIC"     : "Erik Meinders"
