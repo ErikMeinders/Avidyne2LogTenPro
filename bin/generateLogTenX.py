@@ -68,7 +68,7 @@ def writeFlight(flight):
 
     # Only consider flights after june 1 2018
 
-    if ( 10000 * atoi(yr) + 100 * atoi(mo) + atoi(da) ) <= 180601:
+    if ( 10000 * atoi(yr) + 100 * atoi(mo) + atoi(da) ) <= 190216:
        return
 
     if not 'icaoFrom' in flight:
