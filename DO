@@ -2,4 +2,4 @@
 
 source _env
 
-generateLogTenX > flights.html
+generateLogTenX.sh
