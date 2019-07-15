@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+D0=${BASH_SOURCE[0]:-$0}
+
+export PDIR=$(dirname ${D0})
+export AVBUCKET=avidynelog.easytocloud.com
+
+PATH=${PATH}:${PDIR}/bin
+awsprofile erik@labs.easytocloud

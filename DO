@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+source _env
+
+generateLogTenX > flights.html
